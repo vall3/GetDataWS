@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import argparse
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('url', help="Direccion del servicio Web")
@@ -24,7 +25,7 @@ if args.format not in valid_formats:
     sys.exit(1)
 
 if args.name is None:
-    args.name = os.path.basename(os.path.normpath(args.url))
+    args.name = "%s-%s" % (os.path.basename(os.path.normpath(args.url)), time.strftime("%Y%m%d%H%M%S"))
 
 if not os.path.exists(args.dir):
     os.makedirs(args.dir)
