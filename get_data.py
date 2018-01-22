@@ -6,6 +6,13 @@ import sys
 import argparse
 import time
 
+def clean_json(item_json):
+    keys_with_error = [key for key in item_json if '.' in key]
+    for key in keys_with_error:
+        item_json[key.replace('.', '_')] = item_json[key]
+        item_json.pop(key, None)
+    return item_json
+
 parser = argparse.ArgumentParser()
 parser.add_argument('url', help="Direccion del servicio Web")
 parser.add_argument("-d", "--dir", help="Directorio donde se van a grabar los datos", default = ".")
@@ -31,7 +38,7 @@ if not os.path.exists(args.dir):
     os.makedirs(args.dir)
 
 fileName = "%s/%s.%s" % (args.dir, args.name, args.format)
-print("Getting data from %s" % args.url)
+print("Getting item_json from %s" % args.url)
 print("File output: %s" % fileName)
 
 try:
@@ -51,10 +58,10 @@ if args.item and (args.item in response_json):
 
 if args.format == "json":
     with open(fileName, 'w') as file:
-        for data in response_json:
-            json.dump(data, file)
+        for item_json in response_json:
+            json.dump(clean_json(item_json), file)
             file.write(os.linesep)
 
 if args.format == "csv":
-    df = pd.DataFrame(response_json)
+    df = pd.item_jsonFrame(response_json)
     df.to_csv(fileName, index=False, header=True, decimal='.', sep= args.sep)
