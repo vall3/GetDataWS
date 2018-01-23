@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import argparse
+import datetime
 import time
 
 def clean_json(item_json):
@@ -20,6 +21,7 @@ parser.add_argument("-s", "--sep", help="Separador de los campos (Solo CSV)", de
 parser.add_argument("-i", "--item", help="Elemento de la respuesta donde se encuentran los datos")
 parser.add_argument("-n", "--name", help="Nombre del fichero")
 parser.add_argument("-f", "--format", help="Formato de los datos (json o csv)", default = "json")
+parser.add_argument("-t", "--timestamp", help="Inserta una marca de tiempo en los datos", action='store_true', default = False)
 args = parser.parse_args()
 
 if args.url is None:
@@ -56,12 +58,20 @@ response_json = response.json()
 if args.item and (args.item in response_json):
     response_json = response_json[args.item]
 
+timestamp_str = datetime.datetime.now().isoformat()
+
 if args.format == "json":
     with open(fileName, 'w') as file:
         for item_json in response_json:
+            if args.timestamp:
+                item_json['_timestamp'] = timestamp_str
+
             json.dump(clean_json(item_json), file)
             file.write(os.linesep)
 
 if args.format == "csv":
-    df = pd.item_jsonFrame(response_json)
-    df.to_csv(fileName, index=False, header=True, decimal='.', sep= args.sep)
+    df = pd.DataFrame(response_json)
+    if args.timestamp:
+        df = df.assign(_timestamp = timestamp_str)
+
+    df.to_csv(fileName, index=False, header=True, decimal='.', sep= args.sep, encoding='utf-8')
